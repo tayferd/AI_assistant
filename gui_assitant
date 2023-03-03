@@ -1,0 +1,80 @@
+import openai
+import tkinter as tk
+import pyperclip
+openai.api_key = "your key"
+OPENAI_API_URL = "https://api.openai.com/v1/engines/davinci-codex/completions"
+
+# GUI window
+window = tk.Tk()
+window.title("Assistant")
+window.geometry("600x400")
+
+# font and colors
+input_font = ("Arial", 18)
+button_font = ("Arial", 14, "bold")
+bg_color = "#1e1e1e"
+fg_color = "#ffffff"
+button_bg = "#d44a3a"
+button_fg = "#ffffff"
+button_active_bg = "#a53b30"
+button_active_fg = "#ffffff"
+
+# user input box
+input_frame = tk.Frame(window, bg=bg_color)
+input_frame.pack(fill="both", expand=True, padx=20, pady=20)
+input_label = tk.Label(input_frame, text="️", font=input_font, fg=fg_color, bg=bg_color)
+input_label.pack(side="left")
+input_box = tk.Entry(input_frame, font=input_font, bg=bg_color, fg=fg_color)
+input_box.pack(side="left", fill="both", expand=True, padx=(10, 0))
+
+# response area
+response_frame = tk.Frame(window, bg=bg_color)
+response_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+
+response_label = tk.Label(response_frame, text="️", font=input_font, fg=fg_color, bg=bg_color)
+response_label.pack(side="left")
+
+response_scrollbar = tk.Scrollbar(response_frame)
+response_scrollbar.pack(side="right", fill="y")
+
+response_text = tk.Text(response_frame, font=input_font, bg=bg_color, fg=fg_color, wrap="word",
+                        yscrollcommand=response_scrollbar.set)
+response_text.pack(side="left", fill="both", expand=True, padx=(10, 0))
+
+response_scrollbar.config(command=response_text.yview)
+
+
+# response function 
+def respond_to_input():
+    # Get the text from the user input box
+    user_input = input_box.get()
+
+    prompt = f""" 
+     {user_input}
+    """
+
+    completions = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=prompt,
+        max_tokens=1024,
+        n=1,
+        stop=None,
+        temperature=0.7,
+    )
+
+    response_text.delete(1.0, "end")
+    response_text.insert("end", completions.choices[0].text.strip())
+    pyperclip.copy(completions.choices[0].text.strip())
+
+#  button / linked to the function
+button_frame = tk.Frame(window, bg=bg_color)
+button_frame.pack(fill="both", expand=True, padx=20)
+
+button = tk.Button(button_frame, text="Submit", font=button_font, bg=button_bg, fg=button_fg,
+                   activebackground=button_active_bg, activeforeground=button_active_fg, command=respond_to_input)
+button.pack(side="right", padx=(0, 20))
+
+# use the Enter key instead of button to ease use
+window.bind("<Return>", lambda event: button.invoke())
+
+window.mainloop()
